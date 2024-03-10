@@ -8,27 +8,34 @@ long word_count(char *filename);
 long char_count(char *filename);
 
 int main(int argc, char **argv) {
-  if (argc != 3) {
+  if (argc < 2) {
     printf("Usage: %s -c <filename>\n", argv[0]);
     return -1;
   }
-  long answer = -1;
-  char *filename = argv[2];
 
-  if (strcmp(argv[1], "-c") == 0) {
-    answer = byte_count(filename);
-  } else if (strcmp(argv[1], "-l") == 0) {
-    answer = line_count(filename);
-  } else if (strcmp(argv[1], "-w") == 0) {
-    answer = word_count(filename);
-  } else if (strcmp(argv[1], "-m") == 0) {
-    answer = char_count(filename);
-  }
+  if (argc == 3) {
+    long answer = -1;
+    char *filename = argv[2];
 
-  if (answer != -1) {
-    printf("%ld\t%s\n", answer, filename);
-  } else {
-    printf("Error reading file\n");
+    if (strcmp(argv[1], "-c") == 0) {
+      answer = byte_count(filename);
+    } else if (strcmp(argv[1], "-l") == 0) {
+      answer = line_count(filename);
+    } else if (strcmp(argv[1], "-w") == 0) {
+      answer = word_count(filename);
+    } else if (strcmp(argv[1], "-m") == 0) {
+      answer = char_count(filename);
+    }
+
+    if (answer != -1) {
+      printf("%ld\t%s\n", answer, filename);
+    } else {
+      printf("Error reading file\n");
+    }
+  } else if (argc == 2) {
+    char *filename = argv[1];
+    printf("%ld\t%ld\t%ld\t%s\n", byte_count(filename), line_count(filename),
+           word_count(filename), filename);
   }
 
   return 0;
