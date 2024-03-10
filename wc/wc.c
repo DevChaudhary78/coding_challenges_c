@@ -2,88 +2,110 @@
 #include <stdio.h>
 #include <string.h>
 
-long byte_count(char *filename);
-long line_count(char *filename);
-long word_count(char *filename);
-long char_count(char *filename);
+long byte_count(FILE *stream);
+long line_count(FILE *stream);
+long word_count(FILE *stream);
+long char_count(FILE *stream);
 
 int main(int argc, char **argv) {
+  FILE *stream;
+
   if (argc < 2) {
-    printf("Usage: %s -c <filename>\n", argv[0]);
+    printf("Usage: %s -[m|l|c|w] <filename>\n", argv[0]);
     return -1;
   }
 
   if (argc == 3) {
-    long answer = -1;
     char *filename = argv[2];
+    stream = fopen(filename, "r");
+
+    if (stream == NULL) {
+      printf("Failed to open stream!\n");
+      return -1;
+    }
+
+    long answer = -1;
 
     if (strcmp(argv[1], "-c") == 0) {
-      answer = byte_count(filename);
+      answer = byte_count(stream);
     } else if (strcmp(argv[1], "-l") == 0) {
-      answer = line_count(filename);
+      answer = line_count(stream);
     } else if (strcmp(argv[1], "-w") == 0) {
-      answer = word_count(filename);
+      answer = word_count(stream);
     } else if (strcmp(argv[1], "-m") == 0) {
-      answer = char_count(filename);
+      answer = char_count(stream);
     }
 
-    if (answer != -1) {
-      printf("%ld\t%s\n", answer, filename);
+    printf("%ld\t%s\n", answer, filename);
+
+    fclose(stream);
+  }
+
+  else if (argc == 2) {
+    if (strcmp(argv[1], "-m") == 0 || strcmp(argv[1], "-w") == 0 ||
+        strcmp(argv[1], "-l") == 0 || strcmp(argv[1], "-c") == 0) {
+      stream = stdin;
+
+      long answer = -1;
+
+      if (strcmp(argv[1], "-c") == 0) {
+        answer = char_count(stream);
+      } else if (strcmp(argv[1], "-l") == 0) {
+        answer = line_count(stream);
+      } else if (strcmp(argv[1], "-w") == 0) {
+        answer = word_count(stream);
+      } else if (strcmp(argv[1], "-m") == 0) {
+        answer = byte_count(stream);
+      }
+
+      printf("%ld\n", answer);
+
     } else {
-      printf("Error reading file\n");
+      char *filename = argv[1];
+      stream = fopen(filename, "r");
+
+      if (stream == NULL) {
+        printf("Error opening file!\n");
+        return -1;
+      }
+
+      printf("%ld\t%ld\t%ld\t%s\n", byte_count(stream), line_count(stream),
+             word_count(stream), filename);
     }
-  } else if (argc == 2) {
-    char *filename = argv[1];
-    printf("%ld\t%ld\t%ld\t%s\n", byte_count(filename), line_count(filename),
-           word_count(filename), filename);
+  } else {
+    printf("Invalid number of arguments!\n");
+    return -1;
   }
 
   return 0;
 }
 
-long byte_count(char *filename) {
-  FILE *fptr = fopen(filename, "rb");
-  if (fptr == NULL) {
-    return -1;
-  }
+long byte_count(FILE *stream) {
+  fseek(stream, 0, SEEK_END);
+  long size = ftell(stream);
+  rewind(stream);
 
-  fseek(fptr, 0, SEEK_END);
-  long size = ftell(fptr);
-
-  fclose(fptr);
   return size;
 }
 
-long line_count(char *filename) {
-  FILE *fptr = fopen(filename, "r");
-  if (fptr == NULL) {
-    return -1;
-  }
-
+long line_count(FILE *stream) {
   long count = 0;
 
-  for (char c = fgetc(fptr); c != EOF; c = fgetc(fptr)) {
+  for (char c = fgetc(stream); c != EOF; c = fgetc(stream)) {
     if (c == '\n') {
       count++;
     }
   }
-
-  fclose(fptr);
-
+  rewind(stream);
   return count;
 }
 
-long word_count(char *filename) {
-  FILE *fptr = fopen(filename, "r");
-  if (fptr == NULL) {
-    return -1;
-  }
-
+long word_count(FILE *stream) {
   long count = 0;
   int in_word = 0;
   int c;
 
-  while ((c = fgetc(fptr)) != EOF) {
+  while ((c = fgetc(stream)) != EOF) {
     if (isspace(c)) {
       in_word = 0;
     } else if (!in_word) {
@@ -91,25 +113,16 @@ long word_count(char *filename) {
       in_word = 1;
     }
   }
-
-  fclose(fptr);
-
+  rewind(stream);
   return count;
 }
 
-long char_count(char *filename) {
-  FILE *fptr = fopen(filename, "r");
-  if (fptr == NULL) {
-    return -1;
-  }
-
+long char_count(FILE *stream) {
   long count = 0;
 
-  for (char c = getc(fptr); c != EOF; c = getc(fptr)) {
+  for (char c = fgetc(stream); c != EOF; c = fgetc(stream)) {
     count++;
   }
-
-  fclose(fptr);
-
+  rewind(stream);
   return count;
 }
